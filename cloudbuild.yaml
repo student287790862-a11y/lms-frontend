@@ -4,7 +4,7 @@ steps:
     args:
       - 'build'
       - '--build-arg'
-      - 'REACT_APP_API_URL=<Replace-your-lms-backend-url>'
+      - 'REACT_APP_API_URL=https://lms-backend-973961845080.us-central1.run.app'
       - '-t'
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/lms-frontend-repo/lms-frontend:latest'
       - '.'

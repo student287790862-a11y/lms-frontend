@@ -1,0 +1,39 @@
+steps:
+  # 1. Build Docker image with production API URL
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'REACT_APP_API_URL=<Replace-your-lms-backend-url>'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/lms-frontend-repo/lms-frontend:latest'
+      - '.'
+
+  # 2. Push image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/lms-frontend-repo/lms-frontend:latest'
+
+  # 3. Deploy to VM (AUTO DEPLOY)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud compute ssh lms-frontend-vm \
+          --zone=us-central1-a \
+          --command "\
+            gcloud auth configure-docker us-central1-docker.pkg.dev --quiet && \
+            docker stop lms-frontend || true && \
+            docker rm lms-frontend || true && \
+            docker pull us-central1-docker.pkg.dev/$PROJECT_ID/lms-frontend-repo/lms-frontend:latest && \
+            docker run -d \
+              --name lms-frontend \
+              -p 80:80 \
+              --restart always \
+              us-central1-docker.pkg.dev/$PROJECT_ID/lms-frontend-repo/lms-frontend:latest \
+          "
+
+options:
+  logging: CLOUD_LOGGING_ONLY
